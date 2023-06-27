@@ -1,11 +1,56 @@
+# Especifica a versão do docker-compose
 version: '3.1'
 
+# Define os serviços que compõem a aplicação
 services:
+  # Serviço da aplicação
   app:
+    # Define as configurações de build
     build:
+      # Contexto de build é o diretório atual
       context: .
+    # Mapeamento de portas  
     ports:
+      # Mapeia a porta 8000 do host para a porta 8000 do container
       - 8000:8000
+    # Mapeamento de volumes  
     volumes:
-      - ./app:/app
+      # Mapeia o diretório atual do host para o diretório /app no container
+      - .:/app
+    # Comando para iniciar a aplicação  
     command: sh -c "uvicorn main:app --host 0.0.0.0 --reload"
+    # Dependências do serviço
+    depends_on:
+      # Depende do serviço de banco de dados PostgreSQL
+      - postgresql
+    # Arquivo de variáveis de ambiente  
+    env_file:
+      # Usa o arquivo .env no diretório atual
+      - ./.env
+      
+  postgresql:
+    image: postgres
+    ports:
+      - 5432:5432
+    env_file:
+      - ./.env
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+  
+  postgresql-test:
+    image: postgres
+    ports:
+      - 5433:5432
+    env_file:
+      - ./.env
+    volumes:
+      - ./postgres_data_test:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    env_file:
+      - ./.env
+    ports:
+      - 8080:80
+    depends_on:
+      - postgresql
